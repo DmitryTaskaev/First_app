@@ -17,4 +17,6 @@
     <string name="True_Toast">Правильный ответ</string>
     <string name="False_Toast">Не правльный ответ</string>
     <string name="Button_Next">Далее</string>
+    <string name="Button_Back">Назад</string>
+    <string name="Button_Result">Рузультат</string>
 </resources>
