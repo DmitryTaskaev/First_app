@@ -8,6 +8,8 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.isVisible
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 
 private const val TAG = "MainActivity"
 class MainActivity : AppCompatActivity() {
@@ -17,16 +19,11 @@ class MainActivity : AppCompatActivity() {
     public  lateinit var  backButton: ImageButton
     public lateinit var questionTextView: TextView
     public lateinit var ResultButton: Button
-    private  val questionBank = listOf(
-        Question(R.string.quest_australia, true),
-        Question(R.string.quest_ocean, true),
-        Question(R.string.quest_mideast,false),
-        Question(R.string.quest_africa, false),
-        Question(R.string.quest_americas, true),
-        Question(R.string.quest_asia,true))
-    private  var currentIndex = 0
-    private  var currentTrue = 0
-    private  var currentAnswer = 0
+
+    private val quizViewModel: QuizViewModel by lazy {
+        ViewModelProviders.of(this).get(QuizViewModel::class.java)
+    }
+
 
 
     //Activity "onCreate"
@@ -45,7 +42,7 @@ class MainActivity : AppCompatActivity() {
         ResultButton.isVisible = false
         trueButton.setOnClickListener {
             CheckAnswer(true)
-            currentAnswer = currentAnswer + 1
+            quizViewModel.moveToNext()
             trueButton.isEnabled = false
             falseButton.isEnabled = false
             CheckCurr()
@@ -53,31 +50,31 @@ class MainActivity : AppCompatActivity() {
         }
         falseButton.setOnClickListener {
             CheckAnswer(false)
-            currentAnswer = currentAnswer + 1
+            quizViewModel.currentAnswer = quizViewModel.currentAnswer + 1
             trueButton.isEnabled = false
             falseButton.isEnabled = false
             CheckCurr()
         }
-        questionTextView.setOnClickListener{
-            currentIndex = (currentIndex + 1) % questionBank.size
-            UpdateQuestion()
-        }
+        //questionTextView.setOnClickListener{
+            //currentIndex = (currentIndex + 1) % questionBank.size
+            //UpdateQuestion()
+        //}
         nextButton.setOnClickListener {
-            currentIndex = (currentIndex + 1) % questionBank.size
+            quizViewModel.moveToNext()
+            UpdateQuestion()
+            quizViewModel.currentAnswer = quizViewModel.currentAnswer+1
             trueButton.isEnabled = true
             falseButton.isEnabled = true
-            UpdateQuestion()
-            CheckCurr()
         }
         backButton.setOnClickListener {
-            currentIndex = (currentIndex - 1) % questionBank.size
+            quizViewModel.currentAnswer = quizViewModel.currentAnswer+1
+            quizViewModel.moveToBack()
             trueButton.isEnabled = true
             falseButton.isEnabled = true
             UpdateQuestion()
-            CheckCurr()
         }
         ResultButton.setOnClickListener {
-            Toast.makeText(this, "Кол-во привильны ответов $currentTrue" , Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Кол-во привильны ответов ${quizViewModel.currentTrue}" , Toast.LENGTH_SHORT).show()
         }
         UpdateQuestion()
     }
@@ -107,13 +104,13 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG,"onDestroy() called")
     }
     private fun UpdateQuestion(){
-        val questionTextResId = questionBank[currentIndex].textResId
+        val questionTextResId = quizViewModel.currentQuestionText
         questionTextView.setText(questionTextResId)
     }
     private  fun CheckAnswer(UserAnswer: Boolean) {
-        val correctAnwser = questionBank[currentIndex].answer
+        val correctAnwser = quizViewModel.currentQuestionAnswer
         val messageResId = if (UserAnswer == correctAnwser) {
-            currentTrue = currentTrue+1
+            quizViewModel.currentTrue = quizViewModel.currentTrue + 1
             R.string.True_Toast
 
         }
@@ -123,7 +120,7 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
     }
     private fun CheckCurr(){
-        if(currentAnswer == questionBank.size){
+        if(quizViewModel.currentAnswer == quizViewModel.QuestSize){
             ResultButton.isVisible = true
             backButton.isEnabled = false
             nextButton.isEnabled = false
