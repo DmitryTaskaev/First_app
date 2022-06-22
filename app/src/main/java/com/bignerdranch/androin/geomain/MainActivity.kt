@@ -2,6 +2,7 @@ package com.bignerdranch.androin.geomain
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageButton
@@ -12,7 +13,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 
 private const val TAG = "MainActivity"
+private const val KEY_INDEX = "index"
+
 class MainActivity : AppCompatActivity() {
+
     public lateinit var trueButton : Button
     public lateinit var  falseButton : Button
     public  lateinit var  nextButton: ImageButton
@@ -23,14 +27,14 @@ class MainActivity : AppCompatActivity() {
     private val quizViewModel: QuizViewModel by lazy {
         ViewModelProviders.of(this).get(QuizViewModel::class.java)
     }
-
-
-
     //Activity "onCreate"
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate(Bundle?) called")
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val currentIndex = savedInstanceState?.getInt(KEY_INDEX, 0) ?: 0
+        quizViewModel.currentIndex = currentIndex
 
         trueButton = findViewById(R.id.button_true)
         falseButton = findViewById(R.id.button_false)
@@ -42,15 +46,13 @@ class MainActivity : AppCompatActivity() {
         ResultButton.isVisible = false
         trueButton.setOnClickListener {
             CheckAnswer(true)
-            quizViewModel.moveToNext()
             trueButton.isEnabled = false
             falseButton.isEnabled = false
             CheckCurr()
 
         }
-        falseButton.setOnClickListener {
+        falseButton.setOnClickListener { CheckAnswer(false)
             CheckAnswer(false)
-            quizViewModel.currentAnswer = quizViewModel.currentAnswer + 1
             trueButton.isEnabled = false
             falseButton.isEnabled = false
             CheckCurr()
@@ -62,12 +64,11 @@ class MainActivity : AppCompatActivity() {
         nextButton.setOnClickListener {
             quizViewModel.moveToNext()
             UpdateQuestion()
-            quizViewModel.currentAnswer = quizViewModel.currentAnswer+1
             trueButton.isEnabled = true
             falseButton.isEnabled = true
+            //CheckCurr()
         }
         backButton.setOnClickListener {
-            quizViewModel.currentAnswer = quizViewModel.currentAnswer+1
             quizViewModel.moveToBack()
             trueButton.isEnabled = true
             falseButton.isEnabled = true
@@ -93,6 +94,12 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         Log.d(TAG,"onPause() called")
     }
+    //Save
+    override fun onSaveInstanceState(savedInstanceState: Bundle) {
+        super.onSaveInstanceState(savedInstanceState)
+        Log.i(TAG, "OnSaveInstanceState")
+        savedInstanceState.putInt(KEY_INDEX, quizViewModel.currentIndex)
+    }
     //Activity "onStop"
     override fun onStop() {
         super.onStop()
@@ -112,7 +119,6 @@ class MainActivity : AppCompatActivity() {
         val messageResId = if (UserAnswer == correctAnwser) {
             quizViewModel.currentTrue = quizViewModel.currentTrue + 1
             R.string.True_Toast
-
         }
         else {
             R.string.False_Toast
@@ -120,7 +126,8 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
     }
     private fun CheckCurr(){
-        if(quizViewModel.currentAnswer == quizViewModel.QuestSize){
+        if(quizViewModel.currentAnswer == quizViewModel.QuestSize-1){
+            R.string.True_Toast
             ResultButton.isVisible = true
             backButton.isEnabled = false
             nextButton.isEnabled = false
