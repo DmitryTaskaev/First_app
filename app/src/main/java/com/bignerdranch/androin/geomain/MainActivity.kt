@@ -33,8 +33,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val currentIndex = savedInstanceState?.getInt(KEY_INDEX, 0) ?: 0
-        quizViewModel.currentIndex = currentIndex
+        //val currentIndex = savedInstanceState?.getInt(KEY_INDEX, 0) ?: 0
+        //quizViewModel.currentIndex = currentIndex
 
         trueButton = findViewById(R.id.button_true)
         falseButton = findViewById(R.id.button_false)
@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         trueButton.setOnClickListener {
             CheckAnswer(true)
             trueButton.isEnabled = false
+            quizViewModel.BlockButton()
             falseButton.isEnabled = false
             CheckCurr()
 
@@ -54,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         falseButton.setOnClickListener { CheckAnswer(false)
             CheckAnswer(false)
             trueButton.isEnabled = false
+            quizViewModel.BlockButton()
             falseButton.isEnabled = false
             CheckCurr()
         }
@@ -62,17 +64,19 @@ class MainActivity : AppCompatActivity() {
             //UpdateQuestion()
         //}
         nextButton.setOnClickListener {
-            quizViewModel.moveToNext()
-            UpdateQuestion()
             trueButton.isEnabled = true
             falseButton.isEnabled = true
+            quizViewModel.moveToNext()
+            UpdateQuestion()
+
             //CheckCurr()
         }
         backButton.setOnClickListener {
-            quizViewModel.moveToBack()
             trueButton.isEnabled = true
             falseButton.isEnabled = true
+            quizViewModel.moveToBack()
             UpdateQuestion()
+
         }
         ResultButton.setOnClickListener {
             Toast.makeText(this, "Кол-во привильны ответов ${quizViewModel.currentTrue}" , Toast.LENGTH_SHORT).show()
@@ -113,8 +117,17 @@ class MainActivity : AppCompatActivity() {
     private fun UpdateQuestion(){
         val questionTextResId = quizViewModel.currentQuestionText
         questionTextView.setText(questionTextResId)
+        if(quizViewModel.block[quizViewModel.currentIndex] == false){
+            trueButton.isEnabled = false
+            falseButton.isEnabled = false
+        }
+        else {
+            trueButton.isEnabled = true
+            falseButton.isEnabled = true
+        }
     }
     private  fun CheckAnswer(UserAnswer: Boolean) {
+        quizViewModel.currentAnswer = quizViewModel.currentAnswer + 1
         val correctAnwser = quizViewModel.currentQuestionAnswer
         val messageResId = if (UserAnswer == correctAnwser) {
             quizViewModel.currentTrue = quizViewModel.currentTrue + 1
@@ -126,7 +139,7 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
     }
     private fun CheckCurr(){
-        if(quizViewModel.currentAnswer == quizViewModel.QuestSize-1){
+        if(quizViewModel.currentAnswer == quizViewModel.QuestSize){
             R.string.True_Toast
             ResultButton.isVisible = true
             backButton.isEnabled = false
